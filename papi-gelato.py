@@ -4,14 +4,55 @@ from tkinter import ttk
 import threading
 from tkinter import font
 
+##### values #####
+smakenLijst = ["chocolate","strawberry","berry","coffee","vanilla","cheese"]
+toppingLijst = ["poep","chocolade","Water", "Melk"]
+prijsPerLiter = 5.99
+prijsPerBolletje = 0.95
+totalScoops = 0
+
 ##### functions #####
+
+def toppings():
+    global toppingWindow
+    try:
+        window.withdraw()
+        toppingWindow.deiconify()
+    except:
+        window.withdraw()
+        toppingWindow = tkinter.Tk()
+        tkinter.Label(toppingWindow,text="welke topping wil je?").pack()
+        amountOfRadiobuttons1 = 0
+        gekozenTopping = tkinter.StringVar()
+        for i in range(len(toppingLijst)):
+            if amountOfRadiobuttons1 > 4:
+                amountOfRadiobuttons1 = 0
+            exec(f"choise{i} = ttk.Radiobutton(toppingWindow,text='{toppingLijst[i]}',variable=gekozenTopping,value='{toppingLijst[i]}')")
+            exec(f"choise{i}.pack()")
+            amountOfRadiobuttons1 += 1
+        continueButton = tkinter.Button(toppingWindow,text="Continue",command=particulierBonnetje)
+        continueButton.pack()
+        toppingWindow.mainloop()
 
 def updateExampleText(*args):
     exampleText.config(font=("Comic_Sans",textSizeValue.get()))
 
+def bonnetjeZakelijk():
+    window.withdraw()
+    bonnetjeWindow = tkinter.Tk()
+    tkinter.Label(bonnetjeWindow,text="-----Papi gelato-----", font=("Comic_Sans",textSizeValue.get())).pack()
+    tkinter.Label(bonnetjeWindow,text=f"""
+    {liter.get()} Liter        =       €{float(prijsPerLiter) * float(liter.get())}
+
+    -------------------------------------------------------------------------------
+    TotaalPrijs         =       €{float(prijsPerLiter) * float(liter.get())}
+    """,font=("Comic_Sans",textSizeValue.get())).pack()
+    bonnetjeWindow.mainloop()
+
 def settings():
     global textSizeValue
     global exampleText
+    global continueButton
     settingsWindow = tkinter.Tk()
     textSizeValue = tkinter.IntVar(value=20)
     exampleText = tkinter.Label(settingsWindow,text="Example",font=("Comic_Sans",textSizeValue.get()))
@@ -20,12 +61,122 @@ def settings():
     textSize.grid(column=1,row=3)
     textSize.grid(columnspan=2)
     textSizeValue.trace("w",updateExampleText)
+    continueButton = tkinter.Button(text = "continue",command=settingsWindow.destroy,bg="green",font=("Comic_Sans",textSizeValue.get()))
+    continueButton.grid(column=1,row=4)
     settingsWindow.mainloop()
 
+def editTextZakelijkSmaken():
+    global choosingLiter
+    choosingLiter += 1
+    if choosingLiter == int(liter.get()):
+        bonnetjeZakelijk()
+    else:
+        textVar.set(f"What taste do you want for Liter {choosingLiter + 1}")
+
+def smakenZakelijk():
+    global choosingLiter
+    try:
+        liters = int(liter.get())
+        amountOfRadiobuttons = 0
+        choosingLiter = 0
+        textVar.set(f"What taste do you want for Liter {choosingLiter + 1}")
+        whatRow = 1
+        whatColumn = 0
+        continueButton2.destroy()
+        gekozenSmaak = tkinter.StringVar()
+        howMuchLiter.destroy()
+        for i in range(len(smakenLijst)):
+            if amountOfRadiobuttons > 4:
+                amountOfRadiobuttons = 0
+                whatRow += 1
+                whatColumn = 0
+            exec(f"choise{i} = ttk.Radiobutton(text='{smakenLijst[i]}',variable=gekozenSmaak,value='{smakenLijst[i]}')")
+            exec(f"choise{i}.grid(column={whatColumn},row={whatRow})")
+            amountOfRadiobuttons+= 1
+            whatColumn += 1
+        nextButton = tkinter.Button(text="Next",command=editTextZakelijkSmaken)
+        nextButton.grid(column=2,row=whatRow + 1)
+
+    except:
+        messagebox.showerror(message="Something went wrong...\nare you sure you entered everything correctly?")
+
+def particulierBonnetje(*args):
+    global totalScoops
+    toppingWindow.withdraw()
+    totalScoops += int(howManyScoops.get())
+    if messagebox.askyesno(message="Do you want to order more?"):
+        window.withdraw()
+        zakelijkOfParticulierCheck()
+        RadioButtons.destroy()
+        window.deiconify()
+    else:
+        window.destroy()
+        bonnetje = tkinter.Tk()
+        tkinter.Label(text=f"""
+        ------------- Papi Gelato -------------
+
+        Bolletjes {totalScoops} = €{round(float(totalScoops) * float(prijsPerBolletje),2)}
+
+        total = €{round(float(totalScoops) * float(prijsPerBolletje),2)}
+        """).pack()
+        bonnetje.mainloop()
+
+
+def editTextParticulier():
+    global choosingBolletje
+    choosingBolletje += 1
+    if choosingBolletje == int(howManyScoops.get()):
+        window.withdraw()
+        toppings()
+        
+    else:
+        textVar.set(f"What taste do you want your scoop nr {choosingBolletje + 1}?")
+
+def welkeSmaakParticulier():
+    try:
+        global RadioButtons
+        int(howManyScoops.get())
+        gekozenSmaak = tkinter.StringVar()
+        global choosingBolletje
+        scoops.destroy()
+        choosingBolletje = 0
+        amountOfRadiobuttons = 0
+        continueButton3.destroy()
+        textVar.set(f"What taste do you want your scoop nr {choosingBolletje + 1}?")
+        whatRow = 1
+        whatColumn = 0
+
+        RadioButtons = tkinter.LabelFrame()
+        RadioButtons.grid(column=0,row=2)
+        for i in range(len(smakenLijst)):
+            if amountOfRadiobuttons > 4:
+                amountOfRadiobuttons = 0
+                whatRow += 1
+                whatColumn = 0
+            exec(f"choise{i} = ttk.Radiobutton(RadioButtons,text='{smakenLijst[i]}',variable=gekozenSmaak,value='{smakenLijst[i]}')")
+            exec(f"choise{i}.grid(column={whatColumn},row={whatRow})")
+            amountOfRadiobuttons+= 1
+            whatColumn += 1
+        nextButton = tkinter.Button(RadioButtons,text="Next",font=("Comic_Sans",textSizeValue.get()),command=editTextParticulier)
+        nextButton.grid(column=2,row=whatRow + 1)
+    except Exception as e:
+        print(e)
+        messagebox.showerror(message="an error ocurred...\nare you sure you entered everything correctly?")
+
 def zakelijkOfParticulierCheck(*args):
+    global liter
+    global scoops
     global textLabel
-    particulier.destroy()
-    zakelijk.destroy()
+    global textVar
+    global howMuchLiter
+    global continueButton2
+    global continueButton3
+    global howManyScoops
+    try:
+        particulier.destroy()
+        zakelijk.destroy()
+    except:
+        pass
 
     # ##### Create settings button #####     (I don't know how to make the labels update live without crashing the program.)
     # settingsButton = tkinter.Button(text="Settings",bg="green",command=settings,font=("Comic_Sans",textSizeValue.get()))
@@ -33,21 +184,29 @@ def zakelijkOfParticulierCheck(*args):
 
     ##### Create Label for text #####
     textVar = tkinter.StringVar(value="Default Text")
-    textLabel = tkinter.Label(window, textvariable=textVar, font=("Comic_Sans",textSizeValue.get()))
-    textLabel.grid(columnspan=3)
-    textLabel.grid(column=1,row=0)
+    textLabel = tkinter.Label(textvariable=textVar, font=("Comic_Sans",textSizeValue.get()))
+    textLabel.grid(columnspan=5)
+    textLabel.grid(column=0,row=0)
 
     # ##### Start threading timer #####
     # threading.Timer(1,callUpdateLabels).start()
     
     ##### gaat naar particulier of zakelijk #####
-    if partOfZak.get() == "z":
+    if partOfZak.get() == "b":
         textVar.set("How much Liter of icecream do you want?")
-        Liter = tkinter.IntVar()
-        howMuchLiter = tkinter.Entry(window,textvariable=Liter,font=("Comic_Sans",textSizeValue.get()))
+        liter = tkinter.IntVar()
+        howMuchLiter = tkinter.Entry(textvariable=liter,font=("Comic_Sans",textSizeValue.get()))
         howMuchLiter.grid(column=2,row=2)
+        continueButton2 = tkinter.Button(text="Continue",command=smakenZakelijk)
+        continueButton2.grid(column=2,row=3)
+
     elif partOfZak.get() == "p":
-        textVar.set("How many ice cream scoops do you want?")
+        textVar.set("How many icecream scoops do you want?")
+        howManyScoops = tkinter.IntVar()
+        scoops = tkinter.Entry(textvariable=howManyScoops,font=("Comic_Sans",textSizeValue.get()))
+        scoops.grid(column=0,row=2)
+        continueButton3 = tkinter.Button(text="Continue",font=("Comic_Sans",textSizeValue.get()),bg="green",command=welkeSmaakParticulier)
+        continueButton3.grid(column=0,row=3)
     else:
         messagebox.showerror(message="idk what you did, but you broke it.")
 
@@ -57,13 +216,14 @@ window = tkinter.Tk()
 
 ##### kies particulier/zakelijk #####
 partOfZak = tkinter.StringVar()
-zakelijk = ttk.Radiobutton(window,variable=partOfZak,value="z",text="zakelijk")
-particulier = ttk.Radiobutton(window,variable=partOfZak,value="p",text="particulier")
+zakelijk = ttk.Radiobutton(window,variable=partOfZak,value="b",text="for Business")
+particulier = ttk.Radiobutton(window,variable=partOfZak,value="p",text="private")
 zakelijk.pack()
 particulier.pack()
 partOfZak.trace("w",zakelijkOfParticulierCheck)
 
 window.mainloop()
+
 
 ##### Einde window 1 #####
 
@@ -199,11 +359,11 @@ def WatVoorVerpakking():
     elif aantal > 8:
         print("Sorry, maar zulke grote bakjes hebben wij niet.")
         waarin = "ERROR"
-      
+    
     else:
         WrongAnswer()
         waarin = "ERROR"
-       
+    
     return waarin
 
 def keuzeBakjeOfHoorntje():
@@ -237,23 +397,30 @@ while repeat == True:
 
 
 while herhalen == "y":
-    
-    aantal = aantalbolletjes()
+    def Particulier():
+        global aantal
+        global herhalen
+        global TotaleBolletjes
+        global totaalHoorntjes
+        global TotaalBakjes
+        global bakjeOfHoorntje
+        aantal = aantalbolletjes()
 
-    bakjeOfHoorntje = WatVoorVerpakking()
-    if bakjeOfHoorntje != "ERROR":
-        herhalen = nogEenKeer()
-        TotaleBolletjes += aantal
-        if bakjeOfHoorntje == "bakje":
-            
-            TotaalBakjes = TotaalBakjes + 1
-        elif bakjeOfHoorntje == "hoorntje":
-            totaalHoorntjes = totaalHoorntjes + 1
+        bakjeOfHoorntje = WatVoorVerpakking()
+        if bakjeOfHoorntje != "ERROR":
+            herhalen = nogEenKeer()
+            TotaleBolletjes += aantal
+            if bakjeOfHoorntje == "bakje":
+                
+                TotaalBakjes = TotaalBakjes + 1
+            elif bakjeOfHoorntje == "hoorntje":
+                totaalHoorntjes = totaalHoorntjes + 1
+            else:
+                WrongAnswer()
         else:
-            WrongAnswer()
-    else:
 
-        print("")
+            print("")
+    particulier()
 
 if particulier == "nee":
     Litersijs = AantalLiter()
@@ -289,6 +456,4 @@ else:
     btwprijs = round(float(totaalprijs/100 * Btw),2)
     print("Totaal           = €"+ str(totaalprijs2))
     print(f'BTW               {round(totaalprijs2 / 106 * Btw, 2)}€')
-
-
 
